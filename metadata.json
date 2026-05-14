@@ -1,6 +1,6 @@
 {
   "name": "PROMETHEUS - ETF Rotation Intelligence System",
-  "description": "Sistema avanzado de rotación de ETFs basado en análisis macroeconómico y agentes inteligentes para la toma de decisiones con rigor y paciencia.",
+  "description": "Sistema avanzado de rotación de ETFs basado en Python y Streamlit, con agentes inteligentes y motor de análisis macroeconómico GÉNESIS.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
