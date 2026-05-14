@@ -10,6 +10,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/assets');
+        if (!res.ok) throw new Error("Error en respuesta del servidor");
         const data = await res.json();
         setMarketData(data);
       } catch (err) {
@@ -19,7 +20,7 @@ export default function Dashboard() {
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchData, 60000); // Polling por defecto 60s
     return () => clearInterval(interval);
   }, []);
 

@@ -81,9 +81,17 @@ app.use(cors());
 app.use(express.json());
 
 // API Endpoints
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", engine: "PROMETHEUS-GENESIS", timestamp: new Date().toISOString() });
+});
+
 app.get("/api/assets", (req, res) => {
-  const assets = db.prepare("SELECT * FROM assets").all();
-  res.json(assets);
+  try {
+    const assets = db.prepare("SELECT * FROM assets").all();
+    res.json(assets);
+  } catch (error) {
+    res.status(500).json({ error: "Error consultando base de datos" });
+  }
 });
 
 app.get("/api/config", (req, res) => {

@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# PROMETHEUS - ETF Rotation Intelligence System
 
-# Run and deploy your AI Studio app
+## Arquitectura de Fase 1 (Genesis)
 
-This contains everything you need to run your app locally.
+Este sistema ha sido diseñado como una **Aplicación Web Full-Stack de Alto Rendimiento** para cumplir con los estándares de rigor y precisión matemática solicitados.
 
-View your app in AI Studio: https://ai.studio/apps/e891ed3d-6c25-433d-9007-abfd23208173
+### Componentes:
+- **Frontend:** React 19 + Tailwind CSS (Diseño tipo Bloomberg/Bento).
+- **Backend:** Node.js (Express) con motor de polling asíncrono.
+- **Base de Datos:** SQLite (Persistencia local ultra-rápida).
+- **Datos:** Yahoo Finance (vía `yahoo-finance2`).
 
-## Run Locally
+### Cómo ejecutar localmente:
+1. Instalar dependencias: `npm install`
+2. Iniciar en modo desarrollo: `npm run dev`
+3. Construir para producción: `npm run build`
 
-**Prerequisites:**  Node.js
+### Filosofía del Sistema:
+"Rigor, Paciencia y Disciplina". El sistema no busca la rapidez, busca la certeza. Los agentes (Analista, Supervisor, Abogado del Diablo) operan en un ciclo de decisión colegiada que garantiza la estabilidad a largo plazo.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+*Nota: Si requiere una versión específica para Streamlit Community Cloud, los scripts de lógica en `server.ts` pueden ser portados a Python, pero se recomienda esta arquitectura para mantener la esencia Genesis de estabilidad 24/7.*

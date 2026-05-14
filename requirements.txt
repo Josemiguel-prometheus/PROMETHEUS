@@ -1,0 +1,9 @@
+# Archivo de referencia para despliegues externos (Python/Streamlit)
+# Nota: Esta aplicación actualmente corre sobre Node.js/React para maximizar la robustez.
+
+streamlit>=1.30.0
+yfinance>=0.2.36
+pandas>=2.1.0
+sqlite3
+plotly>=5.18.0
+python-dotenv>=1.0.0
