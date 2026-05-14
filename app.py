@@ -1,209 +1,140 @@
 import streamlit as st
 import pandas as pd
 from database import PrometheusDB
-from agents import AgenteAnalista, AgenteSupervisor, AbogadoDelDiablo
-from utils import fetch_market_data, get_market_condition_message
+from utils import fetch_market_snapshot, get_system_mantra
+from agents import get_agents
 import time
 from datetime import datetime
-import os
 
-# Configuración de página Bloomberg-Style
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
-    page_title="PROMETHEUS - ETF Rotation",
+    page_title="PROMETHEUS GENESIS",
     page_icon="🔥",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Estilos CSS Personalizados par Esencia Genesis
-st.markdown("""
-<style>
-    .reportview-container {
-        background: #0E1117;
-    }
-    .main {
-        background: #0E1117;
-    }
-    .stMetric {
-        background-color: #161B22;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #30363D;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #161B22;
-        border-radius: 4px 4px 0px 0px;
-        gap: 1px;
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    div[data-testid="stExpander"] {
-        border: 1px solid #30363D;
-        background-color: #0d1117;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Inicializar Base de Datos
-if not os.path.exists("data"):
-    os.makedirs("data")
-
+# --- INICIALIZACIÓN ---
 db = PrometheusDB()
+agents = get_agents()
 
-# Activos Principales (Fase 1)
-MARKET_SYMBOLS = {
-    '^VIX': ('VIX Index', 'Macro'),
-    'SPY': ('S&P 500', 'Equity'),
-    'QQQ': ('NASDAQ 100', 'Equity'),
-    'IWM': ('Russell 2000', 'Equity'),
-    'GLD': ('Gold', 'Commodities'),
-    'SLV': ('Silver', 'Commodities'),
-    'CL=F': ('WTI Crude Oil', 'Commodities'),
-    'CPER': ('Copper', 'Commodities'),
-    'TLT': ('Treasury 20Y', 'Fixed Income'),
-    '^TNX': ('10Y Yield', 'Fixed Income'),
-    'BTC-USD': ('Bitcoin', 'Crypto'),
-    'DX-Y.NYB': ('US Dollar Index', 'Macro')
+# Lista de activos por defecto para Fase 1
+DEFAULT_ASSETS = {
+    'SPY': {'name': 'S&P 500 ETF', 'cat': 'Equity'},
+    'QQQ': {'name': 'Nasdaq 100 ETF', 'cat': 'Equity'},
+    'TLT': {'name': '20+ Year Treasury', 'cat': 'Fixed Income'},
+    'GLD': {'name': 'SPDR Gold Shares', 'cat': 'Commodities'},
+    'BTC-USD': {'name': 'Bitcoin', 'cat': 'Crypto'},
+    '^VIX': {'name': 'CBOE Volatility Index', 'cat': 'Macro'},
+    'DX-Y.NYB': {'name': 'US Dollar Index', 'cat': 'Macro'}
 }
 
-# Sidebar - Estado del Sistema
+# --- SIDEBAR: CONTROL CENTRAL ---
 with st.sidebar:
-    st.image("https://img.icons8.com/wired/256/ffffff/prometheus.png", width=80)
-    st.title("GÉNESIS CORE")
+    st.title("🔥 PROMETHEUS CORE")
+    st.subheader("Fase 1: Genesis")
     st.markdown("---")
-    st.write("**PROMETHEUS ERP v1.0**")
-    st.info("Rigor · Paciencia · Disciplina")
     
-    if st.button("REFRESH TOTAL", use_container_width=True):
-        with st.spinner("Sincronizando con mercados..."):
-            data = fetch_market_data(MARKET_SYMBOLS)
+    st.info(get_system_mantra())
+    
+    st.markdown("### Acciones de Operatividad")
+    if st.button("Sincronizar Mercados", use_container_width=True):
+        with st.spinner("Conectando con terminales financieras..."):
+            data = fetch_market_snapshot(DEFAULT_ASSETS)
             for item in data:
-                db.upsert_asset(item['symbol'], item['name'], item['category'], item['price'], item['change_pct'])
-            db.log("INFO", "Sincronización manual ejecutada.")
-            st.success("Sincronización completada.")
+                db.update_asset(item['symbol'], item['name'], item['category'], item['price'], item['change'])
+            db.log_agent_action("PRO-S", "Sincronización de mercado completada exitosamente.")
+            st.success("Mercados actualizados.")
+            st.rerun()
 
     st.markdown("---")
-    st.write(f"Última actualización: {datetime.now().strftime('%H:%M:%S')}")
+    st.caption(f"Kernel Online: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
-# Contenido Principal - Pestañas
-t1, t2, t3, t4, t5, t6, t7 = st.tabs([
-    "📊 Dashboard", 
-    "📈 Rankings", 
-    "⏱️ Real-Time", 
-    "🧠 Agentes", 
-    "🛡️ Supervisor", 
-    "📂 Historial", 
-    "⚙️ Config"
-])
+# --- CONTENIDO PRINCIPAL ---
+st.title("Sistema de Inteligencia de Rotación")
 
-# 1. DASHBOARD PRINCIPAL
-with t1:
-    st.title(" Dashboard Principal")
-    assets_df = db.get_assets()
+tabs = st.tabs(["📊 Vista Principal", "📈 Activos", "🧠 Agentes", "🛡️ Supervisor", "⚙️ Config"])
+
+# 1. VISTA PRINCIPAL (Bloomberg-esque)
+with tabs[0]:
+    assets_df = db.get_all_assets()
     
     if not assets_df.empty:
-        # Métricas Macro Principales
-        col1, col2, col3, col4, col5 = st.columns(5)
+        # Fila de métricas clave (Stables)
+        metrics_cols = st.columns(len(assets_df))
+        for i, (idx, row) in enumerate(assets_df.iterrows()):
+            with metrics_cols[i % len(metrics_cols)]:
+                # Evitamos delta_color dinámico complejo para prevenir el error removeChild
+                st.metric(
+                    label=row['symbol'], 
+                    value=f"{row['price']:.2f}",
+                    delta=f"{row['change_pct']:.2f}%"
+                )
         
-        def get_asset_metrics(symbol):
-            row = assets_df[assets_df['symbol'] == symbol]
-            if not row.empty:
-                return row.iloc[0]['last_price'], row.iloc[0]['change_pct']
-            return 0, 0
-
-        v_price, v_chg = get_asset_metrics('^VIX')
-        col1.metric("VIX Index", f"{v_price:.2f}", f"{v_chg:.2f}%", delta_color="inverse")
+        st.markdown("---")
         
-        s_price, s_chg = get_asset_metrics('SPY')
-        col2.metric("S&P 500", f"{s_price:.2f}", f"{s_chg:.2f}%")
+        col_msg, col_stats = st.columns([2, 1])
+        with col_msg:
+            st.subheader("Estado del Algoritmo GÉNESIS")
+            st.warning("DIAGNÓSTICO: El mercado se encuentra en una fase de consolidación técnica. No se detectan señales de rotación crítica en este nodo temporal.")
         
-        d_price, d_chg = get_asset_metrics('DX-Y.NYB')
-        col3.metric("DXY Index", f"{d_price:.2f}", f"{d_chg:.2f}%", delta_color="inverse")
-        
-        g_price, g_chg = get_asset_metrics('GLD')
-        col4.metric("Gold (GLD)", f"{g_price:.2f}", f"{g_chg:.2f}%")
-        
-        t_price, t_chg = get_asset_metrics('^TNX')
-        col5.metric("10Y Yield", f"{t_price:.2f}", f"{t_chg:.2f}%")
-
-    st.markdown("---")
-    
-    col_left, col_right = st.columns([2, 1])
-    
-    with col_left:
-        st.subheader("🛡️ Condición del Mercado")
-        st.warning(get_market_condition_message())
-        
-        st.info("💡 **Aviso Genesis:** El sistema detecta una fuerte correlación negativa entre el DXY y los activos de riesgo. Mantenga disciplina en sus entradas.")
-    
-    with col_right:
-        st.subheader("💎 Sector Momentum")
-        st.success("🥇 **Tecnología (XLK)**\nRendimiento: +1.24% (Intradía)\nFuerza Relativa: Alta")
-
-# 2. RANKINGS Y ROTACIÓN
-with t2:
-    st.title(" Rankings y Rotación")
-    st.info("Módulo de cálculo de Fuerza Relativa en desarrollo para Fase 2.")
-    st.write("Visualización preliminar de ranking por categoría:")
-    if not assets_df.empty:
-        st.table(assets_df[['symbol', 'name', 'category', 'change_pct']].sort_values(by='change_pct', ascending=False))
-
-# 3. COTIZACIONES EN TIEMPO REAL
-with t3:
-    st.title(" Cotizaciones en Tiempo Real")
-    if not assets_df.empty:
-        st.dataframe(assets_df, use_container_width=True, hide_index=True)
+        with col_stats:
+            st.subheader("Fuerza Relativa (Proxy)")
+            # Fake data para Fase 1 UI
+            st.progress(0.75, text="Equity Momentum")
+            st.progress(0.40, text="Fixed Income Risk")
     else:
-        st.write("Pulse 'REFRESH TOTAL' en la barra lateral para cargar datos.")
+        st.warning("No hay datos en el sistema. Ejecute la sincronización desde el panel lateral.")
 
-# 4. AGENTES
-with t4:
-    st.title(" Sistema de Agentes")
-    analista = AgenteAnalista()
-    supervisor = AgenteSupervisor()
-    critico = AbogadoDelDiablo()
+# 2. TABLA DE ACTIVOS
+with tabs[1]:
+    st.subheader("Monitor de Activos en Vigilancia")
+    if not assets_df.empty:
+        st.dataframe(
+            assets_df[['symbol', 'name', 'category', 'price', 'change_pct', 'last_updated']], 
+            use_container_width=True, 
+            hide_index=True
+        )
+    else:
+        st.info("Sincronice para ver la lista de activos.")
+
+# 3. AGENTES
+with tabs[2]:
+    st.subheader("Comité de Inteligencia PROMETHEUS")
     
     c1, c2, c3 = st.columns(3)
-    with c1:
-        st.subheader("Analista")
-        st.code("\n".join(analista.logs if analista.logs else ["Agente listo."]))
-    with c2:
-        st.subheader("Supervisor")
-        st.code("\n".join(supervisor.logs if supervisor.logs else ["Monitorizando..."]))
-    with c3:
-        st.subheader("Crítico")
-        st.code("\n".join(critico.logs if critico.logs else ["Evaluando sesgos..."]))
-
-# 5. SUPERVISOR
-with t5:
-    st.title(" Supervisor del Sistema")
-    st.write("Logs de actividad técnica:")
-    logs_df = db.get_logs()
-    st.dataframe(logs_df, use_container_width=True)
-
-# 6. HISTORIAL Y ANÁLISIS
-with t6:
-    st.title(" Historial y Análisis")
-    st.write("La persistencia de datos históricos se activará en la Fase 2 tras la validación del motor de datos.")
-
-# 7. CONFIGURACIÓN
-with t7:
-    st.title(" Configuración")
-    st.subheader("Añadir ETF Personalizado")
-    with st.form("add_asset"):
-        ticker = st.text_input("Ticker (ej: SOXX)")
-        name = st.text_input("Nombre (ej: Semiconductors)")
-        cat = st.selectbox("Categoría", ["Equity", "Macro", "Fixed Income", "Commodities", "Crypto"])
-        if st.form_submit_button("Añadir"):
-            db.upsert_asset(ticker, name, cat)
-            st.success(f"Activo {ticker} añadido con éxito.")
     
+    with c1:
+        st.markdown(f"### {agents['analista'].name}")
+        st.caption(agents['analista'].role)
+        st.italic(f'"{agents["analista"].mantra}"')
+        st.button("Consultar Analista", key="btn_a")
+        
+    with c2:
+        st.markdown(f"### {agents['supervisor'].name}")
+        st.caption(agents['supervisor'].role)
+        st.italic(f'"{agents["supervisor"].mantra}"')
+        st.button("Validar Riesgo", key="btn_s")
+
+    with c3:
+        st.markdown(f"### {agents['critico'].name}")
+        st.caption(agents['critico'].role)
+        st.italic(f'"{agents["critico"].mantra}"')
+        st.button("Invocar Crítica", key="btn_d")
+
+# 4. SUPERVISOR (LOGS)
+with tabs[3]:
+    st.subheader("Bitácora de Eventos Sistémicos")
+    logs = db.get_logs()
+    if not logs.empty:
+        st.dataframe(logs, use_container_width=True, hide_index=True)
+    else:
+        st.caption("Esperando eventos...")
+
+# 5. CONFIGURACIÓN
+with tabs[4]:
+    st.subheader("Ajustes del Entorno")
+    st.toggle("Modo de Alta Precisión", value=True)
+    st.slider("Agresividad del Algoritmo (Beta)", 1, 10, 3)
     st.divider()
-    st.write("**Parámetros de Polling**")
-    st.slider("Frecuencia de actualización (segundos)", 30, 600, 60)
-    st.slider("Agresividad de Rotación", 1, 10, 3)
+    st.button("Purgar Base de Datos (Hard Reset)", type="secondary")

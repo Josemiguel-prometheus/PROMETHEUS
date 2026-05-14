@@ -1,36 +1,29 @@
-import datetime
+from datetime import datetime
 
-class BaseAgente:
-    def __init__(self, name, role):
+class PrometheusAgent:
+    def __init__(self, name, role, mantra):
         self.name = name
         self.role = role
-        self.logs = []
+        self.mantra = mantra
 
-    def registrar_log(self, mensaje):
-        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-        self.logs.append(f"[{timestamp}] {self.name}: {mensaje}")
+    def say(self, message):
+        return f"[{datetime.now().strftime('%H:%M:%S')}] {self.name}: {message}"
 
-class AgenteAnalista(BaseAgente):
-    def __init__(self):
-        super().__init__("PRO-A (Analista)", "Análisis Macroeconómico y Momentum")
-
-    def analizar(self, market_data):
-        self.registrar_log("Iniciando análisis de correlaciones inter-mercado...")
-        # Lógica placeholder para Fase 1
-        return "El mercado muestra neutralidad constructiva. Mantener rigor en SL."
-
-class AgenteSupervisor(BaseAgente):
-    def __init__(self):
-        super().__init__("PRO-S (Supervisor)", "Gestión de Riesgos y Cumplimiento")
-
-    def validar(self, propuesta):
-        self.registrar_log("Validando niveles de riesgo sistémico...")
-        return True
-
-class AbogadoDelDiablo(BaseAgente):
-    def __init__(self):
-        super().__init__("PRO-D (Crítico)", "Refutación Dialéctica")
-
-    def contradecir(self, tesis):
-        self.registrar_log("Buscando fallos en la hipótesis de momentum...")
-        return "¿Se ha considerado la inversión de la curva como cisne negro inmediato?"
+def get_agents():
+    return {
+        "analista": PrometheusAgent(
+            "PRO-A (Analista)", 
+            "Análisis de Momentum y Correlaciones",
+            "La verdad está en los datos, no en las opiniones."
+        ),
+        "supervisor": PrometheusAgent(
+            "PRO-S (Supervisor)", 
+            "Gestión de Riesgo y Estabilidad",
+            "La preservación del capital es la primera ley."
+        ),
+        "critico": PrometheusAgent(
+            "PRO-D (Crítico)", 
+            "Refutación y Dialéctica",
+            "Toda tesis sin antítesis es un sesgo."
+        )
+    }
